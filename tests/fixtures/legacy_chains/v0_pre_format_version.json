@@ -1,0 +1,32 @@
+{
+  "version": "0.1.0-pre-format-version",
+  "max_workers": 3,
+  "enable_progress": false,
+  "metadata": {},
+  "timeout": null,
+  "replan_policy": null,
+  "search_config": {
+    "strategy": "substring",
+    "substring_config": null,
+    "vector_config": null,
+    "embedding_model": null
+  },
+  "steps": [
+    {
+      "number": 1,
+      "title": "Pre-format-version step",
+      "dependencies": [],
+      "step_type": "llm",
+      "checkpoint": false,
+      "checkpoint_name": null,
+      "replan_enabled": null,
+      "aim": "produce an answer",
+      "reasoning_questions": "",
+      "step_context_queries": [],
+      "stage_action": "",
+      "example_reasoning": "",
+      "retry_max": null,
+      "timeout": null
+    }
+  ]
+}

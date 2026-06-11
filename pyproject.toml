@@ -1,0 +1,118 @@
+[project]
+name = "mmar-carl"
+# dynamic version is not supported yet on uv_build
+version = "0.3.0"
+description = "Collaborative Agent Reasoning Library with multi-step type support"
+authors = [{name = "glazkov", email = "glazkov@airi.net"}, {name = "shaposhnikov", email = "shaposhnikov@airi.net"}, {name = "tagin", email = "tagin@airi.net"}]
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+requires-python = ">=3.12"
+keywords = []
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Documentation",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=2.11.7",
+    "simpleeval>=1.0.0",
+    "mmar-utils~=1.1.18",
+    "openai>=1.0.0",
+]
+
+[project.optional-dependencies]
+vector-search = [
+    "faiss-cpu>=1.7.0",
+    "fastembed>=0.7.3",
+    "numpy>=1.21.0",
+]
+mcp = ["mcp>=1.0.0"]
+langfuse = ["langfuse>=3.0.0,<4.0.0"]
+pandas = ["pandas>=1.0.0"]
+viz = ["matplotlib>=3.8.0"]
+# AgentSkills ecosystem. `agent-skills` backs the optional skill catalog
+# (SkillLoader.catalog_from_agent_skills / catalog_all); pdf / pptx back
+# the bundled PDF→analysis→PPTX skill workflow (see examples/agents/
+# agent_skill_example.py). None are imported eagerly by the library —
+# install the extra only when you use those features.
+agent-skills = ["agent-skills>=0.1.3"]
+pdf = ["pypdf>=6.11.0", "pdfplumber>=0.11.9"]
+pptx = ["python-pptx>=1.0.2"]
+skills = [
+    "mmar-carl[agent-skills]",
+    "mmar-carl[pdf]",
+    "mmar-carl[pptx]",
+]
+all = [
+    "mmar-carl[vector-search]",
+    "mmar-carl[mcp]",
+    "mmar-carl[langfuse]",
+    "mmar-carl[pandas]",
+    "mmar-carl[viz]",
+    "mmar-carl[skills]",
+]
+
+[dependency-groups]
+ci = [
+    "ruff>=0.4",
+    "pytest>=8.2",
+    "pytest-asyncio>=1.0.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.14,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "mmar_carl"
+source-exclude = [".ruff_cache"]
+
+[tool.uv]
+default-groups = ["ci"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+filterwarnings = [
+    # External library warnings (faiss/swig) - not fixable in this codebase
+    "ignore:builtin type .* has no __module__:DeprecationWarning",
+]
+# Tests marked `@pytest.mark.live` hit real external APIs (OpenRouter,
+# Anthropic, OpenAI). They are deselected by default so `pytest` /
+# `make test` stay hermetic; run them with `pytest -m live` /
+# `make test-live` and a valid `OPENAI_API_KEY` set.
+#
+# Tests marked `@pytest.mark.mcp_live` spawn a real MCP server
+# subprocess (via FastMCP) and exercise the stdio transport end-to-end.
+# They need the optional `mcp` Python SDK (`pip install mmar-carl[mcp]`),
+# no external API key — opt in with `pytest -m mcp_live`. The hermetic
+# MCP tests `pytest.importorskip("mcp")` so they skip (not error) when
+# the extra isn't installed.
+markers = [
+    "live: requires a real LLM API key — opt in with `pytest -m live` or `make test-live`",
+    "mcp_live: spawns a real MCP server subprocess — opt in with `pytest -m mcp_live`",
+    "skill_runtime_live: exercises a real `docker` / `firejail` / e2b daemon — opt in with `pytest -m skill_runtime_live`. Each test skips gracefully when its backend (CLI / API key) is unavailable so the suite is safe to run on any host.",
+]
+addopts = "-m 'not live and not mcp_live and not skill_runtime_live'"
+
+[pytest]
+python_files = [ "test_*.py" ]
+testpaths = [ "tests" ]
+
+[mypy]
+ignore_missing_imports = true
+exclude = "tests/fixtures/"
+warn_unused_ignores = true
+show_error_codes = true

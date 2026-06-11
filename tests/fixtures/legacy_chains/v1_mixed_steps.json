@@ -1,0 +1,77 @@
+{
+  "format_version": 1,
+  "carl_version": "0.2.0",
+  "max_workers": 3,
+  "enable_progress": false,
+  "metadata": {},
+  "timeout": null,
+  "replan_policy": null,
+  "search_config": {
+    "strategy": "substring",
+    "substring_config": null,
+    "vector_config": null,
+    "embedding_model": null
+  },
+  "steps": [
+    {
+      "number": 1,
+      "title": "Analyse",
+      "dependencies": [],
+      "triggered_by": [],
+      "step_type": "llm",
+      "checkpoint": false,
+      "checkpoint_name": null,
+      "replan_enabled": null,
+      "aim": "analyse",
+      "reasoning_questions": "",
+      "step_context_queries": [],
+      "stage_action": "",
+      "example_reasoning": "",
+      "llm_config": null,
+      "retry_max": null,
+      "timeout": null
+    },
+    {
+      "number": 2,
+      "title": "Search",
+      "dependencies": [
+        1
+      ],
+      "triggered_by": [],
+      "step_type": "tool",
+      "checkpoint": false,
+      "checkpoint_name": null,
+      "replan_enabled": null,
+      "step_config": {
+        "tool_name": "web_search",
+        "tool_description": "",
+        "parameters": [],
+        "input_mapping": {},
+        "output_key": "result",
+        "timeout": 10.0,
+        "retry_on_error": true,
+        "error_recovery": null,
+        "allowed_tool_tags": null
+      }
+    },
+    {
+      "number": 3,
+      "title": "Save",
+      "dependencies": [
+        2
+      ],
+      "triggered_by": [],
+      "step_type": "memory",
+      "checkpoint": false,
+      "checkpoint_name": null,
+      "replan_enabled": null,
+      "step_config": {
+        "operation": "write",
+        "memory_key": "out",
+        "value_source": "'result'",
+        "default_value": null,
+        "namespace": "default"
+      }
+    }
+  ]
+}

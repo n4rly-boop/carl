@@ -1,0 +1,34 @@
+variables:
+  UV_VERSION: "0.5"
+  PYTHON_VERSION: "3.12"
+  BASE_LAYER: bookworm-slim
+  # GitLab CI creates a separate mountpoint for the build directory,
+  # so we need to copy instead of using hard links.
+  UV_LINK_MODE: copy
+
+default:
+  tags:
+    - shared
+
+stages:
+  - upload_test
+
+upload_test:
+  stage: upload_test
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
+  variables:
+    UV_CACHE_DIR: .uv-cache
+  cache:
+    - key:
+        files:
+          - uv.lock
+      paths:
+        - $UV_CACHE_DIR
+  script:
+    - uv sync
+    - uv run pytest
+    # saving time on recreating container -- if `pytest` fails, no publish done
+    - uv build
+    - uv publish
+  only:
+    - main

@@ -1,0 +1,8 @@
+# Changes here will be overwritten by Copier.
+_commit: bc6bed0
+_src_path: https://gitlab.2a2i.org/agi/templates/mmar-library-template.git
+description: Collaborative Agent Reasoning Learning
+library_name: mmar-carl
+module_name: mmar_carl
+responsible_email: glazkov@airi.net
+responsible_name: glazkov

@@ -1,0 +1,35 @@
+# editors
+.idea/
+.vscode/
+.DS_Store
+
+# python
+*.egg-info/
+*.py[cod]
+.venv/
+.venvs/
+/build/
+/dist/
+
+# tools
+.coverage*
+/.pdm-build/
+/htmlcov/
+/site/
+uv.lock
+
+# cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+
+# misc
+test.py
+playground_*.py
+
+.env
+test_inference.py
+notebooks/*
+empiric/*
