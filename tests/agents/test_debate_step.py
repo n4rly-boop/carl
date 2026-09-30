@@ -43,6 +43,10 @@ class _ScriptedLLM(LLMClientBase):
     async def get_response_with_retries(self, prompt: str, retries: int = 3) -> str:
         return await self.get_response(prompt)
 
+    async def get_response_with_usage(self, prompt: str, retries: int = 3) -> tuple[str, dict]:
+        result = await self.get_response(prompt)
+        return result, {"prompt": 10, "completion": 5, "total": 15}
+
 
 def _basic_debate(
     *,
@@ -216,6 +220,15 @@ async def test_result_data_includes_transcript_and_metadata() -> None:
     assert rd["role_call_count"] == 4
     assert len(rd["transcript"]) == 4
     assert rd["topic"] == "Should we add caching?"
+
+
+@pytest.mark.asyncio
+async def test_token_usage_summed_across_all_role_and_judge_calls() -> None:
+    """2 roles x 2 rounds + 1 judge = 5 calls; each contributes 15 tokens."""
+    chain, ctx, _ = _basic_debate(replies=["A", "B", "C", "D", "V"], rounds=2)
+    result = await chain.execute_async(ctx)
+    usage = result.step_results[0].token_usage
+    assert usage == {"prompt": 50, "completion": 25, "total": 75}
 
 
 @pytest.mark.asyncio

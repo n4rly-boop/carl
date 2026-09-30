@@ -4775,6 +4775,11 @@ class DebateStepExecutor(StepExecutorBase):
 
             transcript: list[dict[str, Any]] = []
             transcript_text_so_far = ""
+            total_usage: dict[str, int] = {}
+
+            def _add_usage(usage: dict[str, int]) -> None:
+                for k, v in usage.items():
+                    total_usage[k] = total_usage.get(k, 0) + v
 
             for round_idx in range(1, config.rounds + 1):
                 # cancellation poll between rounds.
@@ -4811,11 +4816,23 @@ class DebateStepExecutor(StepExecutorBase):
                     )
                     role_llm_config = config.role_llm_configs.get(role) or config.llm_config
                     client = context.get_llm_client_for_step(role_llm_config)
-                    argument = await client.get_response_with_retries(
-                        prompt, retries=context.retry_max
-                    )
+                    if isinstance(client, LLMClientBase):
+                        argument, turn_usage = await client.get_response_with_usage(
+                            prompt, retries=context.retry_max
+                        )
+                    else:
+                        argument = await client.get_response_with_retries(
+                            prompt, retries=context.retry_max
+                        )
+                        turn_usage = {}
+                    _add_usage(turn_usage)
                     argument = (argument or "").strip()
-                    transcript.append({"round": round_idx, "role": role, "argument": argument})
+                    transcript.append({
+                        "round": round_idx,
+                        "role": role,
+                        "argument": argument,
+                        "token_usage": turn_usage,
+                    })
                     transcript_text_so_far = self._format_transcript(transcript)
                     # fire per-turn argument event so
                     # CARE can stream each role's contribution as it
@@ -4832,9 +4849,16 @@ class DebateStepExecutor(StepExecutorBase):
                 transcript=transcript_text_so_far or "(no debate occurred)",
             )
             judge_client = context.get_llm_client_for_step(config.llm_config)
-            verdict = await judge_client.get_response_with_retries(
-                judge_prompt, retries=context.retry_max
-            )
+            if isinstance(judge_client, LLMClientBase):
+                verdict, judge_usage = await judge_client.get_response_with_usage(
+                    judge_prompt, retries=context.retry_max
+                )
+            else:
+                verdict = await judge_client.get_response_with_retries(
+                    judge_prompt, retries=context.retry_max
+                )
+                judge_usage = {}
+            _add_usage(judge_usage)
             verdict = (verdict or "").strip()
 
             if config.output_memory_key:
@@ -4873,6 +4897,7 @@ class DebateStepExecutor(StepExecutorBase):
                 success=True,
                 execution_time=time.time() - start_time,
                 updated_history=updated_history,
+                token_usage=total_usage,
             )
 
         except Exception as exc:
